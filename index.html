@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mapa Ostravy</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { width: 1000px; height: 700px; background-color: white;  }
+    .info { padding: 6px 8px; background: white; }
+    .legend { background: white; padding: 6px 8px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
+  <script>
+    // Inicializace mapy
+    var map = L.map('map').setView([49.835, 18.292], 12);
+
+    
+    
+  /* // Přidání podkladové mapy
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map); */
+    
+
+    // Načtení GeoJSON dat
+    d3.json('Obvody_WGS84.geojson').then(function(geoData) {
+      // Načtení CSV dat
+      d3.csv('sportoviste_obvody.csv').then(function(csvData) {
+        // Vytvoření mapy počtů sportovišť podle názvu obvodu
+        var dataMap = {};
+        csvData.forEach(function(row) {
+          dataMap[row.OBKOD] = +row.POCET;
+        });
+
+        console.log(csvData);
+
+       /*  // Funkce pro získání barvy podle hodnoty
+        function getColor(d) {
+          return d > 50 ? '#0868ac' :
+                 d > 40 ? '#2b8cbe' :
+                 d > 30 ? '#4eb3d3' :
+                 d > 20 ? '#7bccc4' :
+                 d > 10 ? '#a8ddb5' :
+                 d > 5  ? '#ccebc5' :
+                 d > 0  ? '#e0f3db' :
+                          '#FFEDA0';
+        } */
+
+         // Funkce pro získání barvy podle hodnoty
+        function getColor(d) {
+          return d > 50 ? '#800026' :
+                 d > 40 ? '#BD0026' :
+                 d > 30 ? '#E31A1C' :
+                 d > 20 ? '#FC4E2A' :
+                 d > 10 ? '#FD8D3C' :
+                 d > 5  ? '#FEB24C' :
+                 d > 0  ? '#FED976' :
+                          '#FFEDA0';
+        }
+
+        // Stylování jednotlivých oblastí
+        function style(feature) {
+          var value = dataMap[feature.properties.OBKOD] || 0;
+          return {
+            fillColor: getColor(value),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7
+          };
+        }
+
+        // Přidání GeoJSON vrstvy do mapy
+        L.geoJson(geoData, {
+          style: style,
+          onEachFeature: function(feature, layer) {
+            var value = dataMap[feature.properties.OBKOD] || 0;
+            layer.bindPopup('<strong>' + feature.properties.NAZEV + '</strong><br>Počet sportovišť: ' + value);
+          }
+        }).addTo(map);
+      });
+    });
+  </script>
+</body>
+</html>
