@@ -55,6 +55,19 @@
         color: #007A99;
       }
 
+      #info-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+#info-panel td {
+  padding: 4px 6px;
+  vertical-align: top;
+}
+#info-panel tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
+
+
 
   </style>
 </head>
@@ -167,18 +180,21 @@ d3.json('sportoviste_WGS84_gjson.geojson').then(function(sportData) {
   L.geoJSON(sportData, {
     onEachFeature: function (feature, layer) {
   layer.on('click', function (e) {
-    var props = feature.properties;
-    infoPanel.innerHTML =
-      '<h4>' + (props.NAZEV || 'Sportoviště') + '</h4>' +
-      '<b>Typ:</b> ' + (props.TYP || 'neuvedeno') + '<br>' +
-      '<b>Adresa:</b> ' + (props.ADRESA || 'neuvedeno') + '<br>' +
-      '<b>Obvod:</b> ' + (props.OBVOD || 'neuvedeno') + '<br>' +
-      '<b>Venkovní:</b> ' + (props.VENKOVNI === '1' ? 'Ano' : 'Ne') + '<br>';
-    infoPanel.style.display = 'block';
+  var props = feature.properties;
+  var html = '<h4>Detail sportoviště</h4><table>';
 
-    // Zastavíme další události
-    L.DomEvent.stop(e); // <<< TOTO je správný způsob
-  });
+  for (var key in props) {
+    if (props.hasOwnProperty(key)) {
+      html += '<tr><td><strong>' + key + ':</strong></td><td>' + props[key] + '</td></tr>';
+    }
+  }
+
+  html += '</table>';
+  infoPanel.innerHTML = html;
+  infoPanel.style.display = 'block';
+
+  L.DomEvent.stop(e);
+});
 }
 ,
     pointToLayer: function (feature, latlng) {
