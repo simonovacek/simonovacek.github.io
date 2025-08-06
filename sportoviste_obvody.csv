@@ -1,24 +1,24 @@
-OBKOD,NAZEV,POCET,
-12,Hošťálkovice,4
-20,Hrabová,2
-17,Krásné Pole,5
-11,Lhotka,6
-9,Mariánské Hory a Hulváky,28
-18,Martinov,2
-15,Michálkovice,2
-1,Moravská Ostrava a Přívoz,39
-5,Nová Bělá,2
-13,Nová Ves,4
-3,Ostrava - Jih,42
-10,Petřkovice,8
-23,Plesná,3
-19,Polanka nad Odrou,8
-4,Poruba,44
-14,Proskovice,5
-8,Pustkovec,4
-16,Radvanice a Bartovice,20
-2,Slezská Ostrava,17
-7,Stará Bělá,14
-21,Svinov,14
-22,Třebovice,3
-6,Vítkovice,21
+OBKOD,NAZEV,POCET,VENK
+12,Hošťálkovice,4,15
+20,Hrabová,2,15
+17,Krásné Pole,5,15
+11,Lhotka,6,15
+9,Mariánské Hory a Hulváky,28,15
+18,Martinov,2,15
+15,Michálkovice,2,15
+1,Moravská Ostrava a Přívoz,39,15
+5,Nová Bělá,2,15
+13,Nová Ves,4,15
+3,Ostrava - Jih,42,15
+10,Petřkovice,8,15
+23,Plesná,3,15
+19,Polanka nad Odrou,8,15
+4,Poruba,44,15
+14,Proskovice,5,15
+8,Pustkovec,4,15
+16,Radvanice a Bartovice,20,15
+2,Slezská Ostrava,17,15
+7,Stará Bělá,14,15
+21,Svinov,14,15
+22,Třebovice,3,15
+6,Vítkovice,21,15
