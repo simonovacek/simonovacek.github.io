@@ -1,4 +1,4 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Mapa Ostravy</title>
@@ -21,10 +21,31 @@
               opacity: 0.7;
               font-size: 20px;
             }
+
+            #info-panel {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 250px;
+            max-height: 60%;
+            overflow-y: auto;
+            font-family: sans-serif;
+            font-size: 14px;
+            display: none;
+          }
+
+
   </style>
 </head>
 <body>
   <div id="map"></div>
+  <div id="info-panel" onclick="event.stopPropagation()"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://d3js.org/d3.v5.min.js"></script>
 
@@ -119,10 +140,49 @@ legend.onAdd = function (map) {
 
 legend.addTo(map);
 
+
+d3.json('sportoviste_WGS84_gjson.geojson').then(function(sportData) {
+  var infoPanel = document.getElementById('info-panel');
+
+  L.geoJSON(sportData, {
+    onEachFeature: function (feature, layer) {
+  layer.on('click', function (e) {
+    var props = feature.properties;
+    infoPanel.innerHTML =
+      '<h4>' + (props.NAZEV || 'Sportoviště') + '</h4>' +
+      '<b>Typ:</b> ' + (props.TYP || 'neuvedeno') + '<br>' +
+      '<b>Adresa:</b> ' + (props.ADRESA || 'neuvedeno') + '<br>' +
+      '<b>Obvod:</b> ' + (props.OBVOD || 'neuvedeno') + '<br>' +
+      '<b>Venkovní:</b> ' + (props.VENKOVNI === '1' ? 'Ano' : 'Ne') + '<br>';
+    infoPanel.style.display = 'block';
+
+    // Zastavíme další události
+    L.DomEvent.stop(e); // <<< TOTO je správný způsob
+  });
+}
+,
+    pointToLayer: function (feature, latlng) {
+      return L.circleMarker(latlng, {
+        radius: 6,
+        fillColor: "#007A99",  // Tmavě modrozelená
+        color: "#004D5E",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.85
+      });
+    }
+  }).addTo(map);
+
+  // Zavřít panel při kliknutí mimo marker
+  map.on('click', function (e) {
+  document.getElementById('info-panel').style.display = 'none';
+});
+
+});
+
+
       });
     });
   </script>
 </body>
 </html>
-
-
