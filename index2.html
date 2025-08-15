@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mapa Ostravy</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+    #map { width: 100%; height: 100%; background-color: white;  }
+    .info { padding: 6px 8px; background: white; }
+    .legend i {
+              width: 18px;
+              height: 18px;
+              float: left;
+              margin-right: 8px;
+              opacity: 0.7;
+              font-size: 20px;
+            }
+
+            #info-panel {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 250px;
+            max-height: 60%;
+            overflow-y: auto;
+            font-family: sans-serif;
+            font-size: 14px;
+            display: none;
+          }
+          #map-license {
+        position: absolute;
+        bottom: 5px;
+        left: 10px;
+        background: rgba(255,255,255,0.8);
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        z-index: 1000;
+        font-family: sans-serif;
+      }
+      #map-license a {
+        text-decoration: none;
+        color: #007A99;
+      }
+
+      #info-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+#info-panel td {
+  padding: 4px 6px;
+  vertical-align: top;
+}
+#info-panel tr:nth-child(even) {
+  background-color: #f0f0f0;
+}
+
+
+
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="map-license">
+  Data © <a href="https://mapy.ostrava.cz/data/otevrena-data/" target="_blank">Statutární město Ostrava</a>  
+  (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>)
+</div>
+
+  <div id="info-panel" onclick="event.stopPropagation()"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
+  <script>
+    // Inicializace mapy
+    var map = L.map('map').setView([49.835, 18.292], 12);
+
+    
+    
+  /* // Přidání podkladové mapy
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map); */
+    
+
+    // Načtení GeoJSON dat
+    d3.json('Obvody_WGS84.geojson').then(function(geoData) {
+      // Načtení CSV dat
+      d3.csv('sportoviste_obvody.csv').then(function(csvData) {
+        // Vytvoření mapy počtů sportovišť podle názvu obvodu
+        var dataMap = {};
+        csvData.forEach(function(row) {
+          dataMap[row.OBKOD] = {
+          pocet: +row.POCET,
+          venk: +row.VENK
+        };
+        });
+
+        console.log(csvData);
+
+        // Funkce pro získání barvy podle hodnoty
+        function getColor(d) {
+          return  d > 40 ? '#003C69' :      // nejtmavší
+                  d > 30 ? '#005A8B' :
+                  d > 20 ? '#0079AD' :
+                  d > 10 ? '#0096C2' :
+                  d > 5  ? '#00A8CB' :
+                  d > 0  ? '#00BBD3' :      // nejsvětlejší z těch s podmínkou
+                          '#00ADD0';
+        }
+
+
+        // Stylování jednotlivých oblastí
+        function style(feature) {
+          var value = dataMap[feature.properties.OBKOD]?.pocet || 0;
+          return {
+            fillColor: getColor(value),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7
+          };
+        }
+
+        // Přidání GeoJSON vrstvy do mapy
+        L.geoJson(geoData, {
+          style: style,
+          onEachFeature: function(feature, layer) {
+            var obkod = feature.properties.OBKOD;
+          var obvodData = dataMap[obkod] || { pocet: 0, venk: 0 }
+            layer.bindPopup(
+            '<strong>' + feature.properties.NAZEV + '</strong><br>' +
+            'Počet sportovišť: ' + obvodData.pocet + '<br>' +
+            'Počet venkovních sportovišť: ' + obvodData.venk );
+          }
+
+
+          
+          
+        }).addTo(map);
+
+        // Legenda v pravém dolním rohu
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+  var div = L.DomUtil.create('div', 'info legend'),
+      grades = [0, 5, 10, 20, 30, 40],
+      labels = [];
+
+  for (var i = 0; i < grades.length; i++) {
+    var from = grades[i];
+    var to = grades[i + 1];
+
+    div.innerHTML +=
+      '<i style="background:' + getColor(from + 1) + '"></i> ' +
+      from + (to ? '&ndash;' + to + '<br>' : '+');
+  }
+
+  return div;
+};
+
+legend.addTo(map);
+
+
+d3.json('sportoviste_WGS84_gjson.geojson').then(function(sportData) {
+  var infoPanel = document.getElementById('info-panel');
+
+  L.geoJSON(sportData, {
+    onEachFeature: function (feature, layer) {
+  layer.on('click', function (e) {
+  var props = feature.properties;
+  var html = '<h4>Detail sportoviště</h4><table>';
+
+  for (var key in props) {
+    if (props.hasOwnProperty(key)) {
+      html += '<tr><td><strong>' + key + ':</strong></td><td>' + props[key] + '</td></tr>';
+    }
+  }
+
+  html += '</table>';
+  infoPanel.innerHTML = html;
+  infoPanel.style.display = 'block';
+
+  L.DomEvent.stop(e);
+});
+}
+,
+    pointToLayer: function (feature, latlng) {
+      return L.circleMarker(latlng, {
+        radius: 6,
+        fillColor: "#007A99",  // Tmavě modrozelená
+        color: "#004D5E",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.85
+      });
+    }
+  }).addTo(map);
+
+  // Zavřít panel při kliknutí mimo marker
+  map.on('click', function (e) {
+  document.getElementById('info-panel').style.display = 'none';
+});
+
+});
+
+
+      });
+    });
+  </script>
+
+  <p style="font-size: 12px; color: #555; padding: 10px;">
+  Data byla převzata z 
+  <a href="https://mapy.ostrava.cz/data/otevrena-data/" target="_blank">Portálu otevřených dat statutárního města Ostravy</a>
+  a jsou poskytována pod licencí 
+  <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>.
+</p>
+
+</body>
+</html>
