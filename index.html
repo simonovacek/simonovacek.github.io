@@ -2,237 +2,229 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <title>Mapa Ostravy</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa sportu v Ostravě</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root{
+      --ostrava-dark:#003C69;
+      --ostrava-light:#00ADD0;
+      --muted:#6b86a3;
+      --chip-bg:#f3f7fb;
+      --chip-border:#bcd3e6;
+      --panel-w:320px;
+      --top-h:56px;
+      --shadow:0 8px 24px rgba(0,0,0,.08);
+    }
     html, body { height: 100%; margin: 0; padding: 0; }
-    #map { width: 100%; height: 100%; background-color: white; }
+    body{font-family:'Montserrat',sans-serif;color:#0b294b;}
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; background:#fff; }
 
-    /* INFO PANEL – zpátky vlevo, jako dřív */
-    #info-panel {
-      position: absolute;
-      top: 50%;
-      left: 10px;
-      transform: translateY(-50%);
-      background: white;
-      padding: 12px;
-      border-radius: 8px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.2);
-      z-index: 1000;
-      width: 300px;
-      max-height: 60%;
-      overflow-y: auto;
-      font-family: sans-serif;
-      font-size: 14px;
-      display: none;
-    }
-    #info-panel table { width: 100%; border-collapse: collapse; }
-    #info-panel td { padding: 4px 6px; vertical-align: top; }
-    #info-panel tr:nth-child(even) { background-color: #f0f0f0; }
+    .topbar{position: fixed; left:0; top:0; right:0; height:var(--top-h);
+      display:flex; align-items:center; gap:12px; padding:8px 10px;
+      background:#fff; border-bottom:1px solid #e6eef6; z-index:1200;}
+    .hamburger{width:36px; height:36px; border-radius:8px; border:1px solid #d5e7f5;
+      background:#f6fbff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;}
+    .hamburger svg{width:20px; height:20px;}
+    .logo{height:28px; width:auto; object-fit:contain;}
+    .title{font-size:18px; font-weight:800;}
+    .spacer{flex:1}
+    .search{display:flex; align-items:center; gap:8px; border:1px solid #d5e7f5; border-radius:999px; padding:6px 10px; background:#f6fbff;}
+    .search input{border:none; outline:none; background:transparent; width:200px; font-size:14px;}
 
-    /* LICENCE */
-    #map-license {
-      position: absolute;
-      bottom: 5px;
-      left: 10px;
-      background: rgba(255,255,255,0.8);
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      z-index: 1000;
-      font-family: sans-serif;
-    }
-    #map-license a { text-decoration: none; color: #007A99; }
+    aside#sidebar{position: fixed; top:var(--top-h); left:0; bottom:0; width:var(--panel-w);
+      background:#fff; border-right:1px solid #e6eef6; padding:14px; overflow:auto; z-index:1100;
+      transition: transform .25s ease;}
+    aside#sidebar.drawer{transform: translateX(-100%);}
+    aside#sidebar.drawer.open{transform: translateX(0); box-shadow: var(--shadow);}
 
-    /* LEGENDA – původní vzhled */
-    .legend {
-      line-height: 18px;
-      color: #555;
-      background: white;
-      padding: 6px 8px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      border-radius: 5px;
-    }
-    .legend i {
-      width: 18px; height: 18px;
-      float: left; margin-right: 8px; opacity: 0.7;
+    h2{font-size:13px; text-transform:uppercase; color:var(--muted); margin:14px 0 8px}
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
+      border:1px solid var(--chip-border); background:var(--chip-bg); cursor:pointer; font-weight:600}
+    .chip.selected{background:var(--ostrava-light); color:#fff; border-color:var(--ostrava-light)}
+    .segmented{display:flex; border:1px solid #cfe1f0; border-radius:999px; overflow:hidden; background:var(--chip-bg)}
+    .segmented .chip{border:0; border-radius:0; background:transparent; flex:1; justify-content:center}
+    .segmented .chip.selected{background:var(--ostrava-light); color:#fff}
+    .check{display:flex; align-items:center; gap:10px; padding:10px 8px; background:#f7fbff; border:1px solid #d8e7f5; border-radius:12px; margin:6px 0}
+    .check input{width:18px; height:18px}
+    .check.disabled{opacity:.5; filter:saturate(.6)}
+    .row{display:flex; align-items:center; justify-content:space-between}
+    .button{display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
+      border:1px solid #d8e7f5; background:#f6fbff; cursor:pointer; font-weight:700}
+    .button.primary{background:var(--ostrava-dark); color:#fff; border-color:var(--ostrava-dark)}
+
+    #overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: none;}
+    #overlay.active {display:block;}
+
+    #info-panel {position: absolute; top: calc(var(--top-h) + 10px); right: 10px; background: white;
+      padding: 12px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.2); z-index: 1300;
+      width: 320px; max-height: 60%; overflow-y: auto; font-size: 14px; display: none;}
+    #info-panel table{width:100%; border-collapse:collapse;}
+    #info-panel td{padding:4px 6px; vertical-align:top;}
+    #info-panel tr:nth-child(even){background-color:#f0f0f0;}
+
+    #map-license {position: absolute; bottom: 16px; left: calc(30px + var(--panel-w));
+      background: rgba(255,255,255,0.86); font-size: 12px; padding: 4px 8px; border-radius: 4px;
+      z-index: 600; pointer-events: none;}
+    #map-license a{text-decoration:none; color:#007A99; pointer-events:auto;}
+
+    .legend {line-height: 18px; color:#555; background:white; padding:6px 8px; box-shadow:0 0 15px rgba(0,0,0,0.2); border-radius:5px;}
+    .legend i{width:18px; height:18px; float:left; margin-right:8px; opacity:0.7}
+
+    @media (max-width: 860px){
+      .logo{height:20px;} .title{font-size:16px;} .search{display:none;}
+      aside#sidebar{width:86vw; max-width:360px;} #map-license{left:16px;}
     }
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <button class="hamburger" id="toggleSidebar" aria-label="Zobrazit filtr">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+    </button>
+    <img src="Ostrava_lg.png" alt="Ostrava!!!" class="logo" />
+    <div class="title">Mapa sportu v Ostravě</div>
+    <div class="spacer"></div>
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.3-4.3m2.3-5.2a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="search" placeholder="Hledat" aria-label="Hledat">
+    </div>
+  </div>
+
+  <div id="overlay"></div>
+
+  <aside id="sidebar" class="drawer">
+    <div class="row"><h2>Kategorie zařízení</h2><button id="resetFilters" class="button">Resetovat filtry</button></div>
+    <div class="chips" id="catChips">
+      <div class="chip">Školní infrastruktura</div>
+      <div class="chip">Sportovní spolky a kluby</div>
+      <div class="chip">Komerční sportoviště</div>
+      <div class="chip">Neorganizovaný sport a rekreace</div>
+    </div>
+
+    <h2>Úroveň sportu</h2>
+    <div class="segmented" id="levelChips">
+      <div class="chip">Vrcholový sport</div>
+      <div class="chip">Výkonnostní sport</div>
+      <div class="chip">Sport pro všechny</div>
+    </div>
+
+    <h2>Analytické vrstvy</h2>
+    <label class="check"><input type="checkbox" id="layerObvody" checked /> Sportoviště dle obvodů (choropleth)</label>
+    <label class="check"><input type="checkbox" id="layerBody" checked /> Sportoviště (body)</label>
+    <label class="check"><input type="checkbox" id="layerCyklotrasy" checked /> Cyklotrasy</label>
+    <label class="check"><input type="checkbox" id="layerBasemap" /> Podkladová mapa</label>
+
+    <div style="height:12px"></div>
+    <button class="button primary" id="applyBtn">Aplikovat filtry</button>
+    <p style="color:var(--muted); font-size:12px; margin-top:8px;">Při přiblížení se mapa zaměřuje na kurzor myši.</p>
+  </aside>
+
   <div id="map"></div>
   <div id="info-panel" onclick="event.stopPropagation()"></div>
   <div id="map-license">
-    Data © <a href="https://mapy.ostrava.cz/data/otevrena-data/" target="_blank">Statutární město Ostrava</a>
-    (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>)
-  </div>
+  Data © <a href="https://mapy.ostrava.cz/data/otevrena-data/" target="_blank">Statutární město Ostrava</a> (CC BY 4.0) |
+  <a href="https://leafletjs.com" target="_blank">Leaflet</a> (BSD-2) |
+  Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a> (ODbL)
+</div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://d3js.org/d3.v5.min.js"></script>
 
   <script>
-    /* ===== Mapa ===== */
-    const map = L.map('map', {
-      center: [49.820, 18.250],
-      zoom: 11,
-      zoomControl: true,
-      scrollWheelZoom: 'mouse',
-      attributionControl: false
-    });
+    const map = L.map('map',{center:[49.820,18.250],zoom:11,zoomControl:true,scrollWheelZoom:'mouse',attributionControl:false});
 
-    // Stabilní pořadí vrstev (obvody dole, linie, body nahoře)
-    map.createPane('obvody'); map.getPane('obvody').style.zIndex = 200;
-    map.createPane('linie');  map.getPane('linie').style.zIndex = 400;
-    map.createPane('body');   map.getPane('body').style.zIndex = 500;
+    // Panes for consistent ordering: tilePane ~200 by Leaflet defaults.
+    map.createPane('obvody-outline'); map.getPane('obvody-outline').style.zIndex = 300; // above tiles
+    map.createPane('obvody');         map.getPane('obvody').style.zIndex = 350;        // choropleth above outline
+    map.createPane('linie');          map.getPane('linie').style.zIndex  = 400;
+    map.createPane('body');           map.getPane('body').style.zIndex   = 500;
 
-    const infoPanel   = document.getElementById('info-panel');
-    const overlayLayers = {};
+    const infoPanel=document.getElementById('info-panel'); const overlayLayers={};
+    map.on('click',()=>{infoPanel.style.display='none';});
 
-    map.on('click', () => { infoPanel.style.display = 'none'; });
-
-    /* ===== Definice tematických vrstev ===== */
-    const vrstvy = [
-      { nazev: "Sportoviště", soubor: "sportoviste_WGS84_gjson.geojson", typ: "point", barva: "#007A99", pane: "body" },
-      //{ nazev: "Cyklobody",   soubor: "cyklo_bod_WGS84_gjson.geojson",   typ: "point", barva: "#4CAF50", pane: "body" },
-      { nazev: "Cyklostezky", soubor: "cyklo_WGS84_utf8.geojson",        typ: "line",  barva: "#6A5ACD", pane: "linie" }
+    // Thematic layers
+    const vrstvy=[
+      {nazev:"Sportoviště",soubor:"sportoviste_WGS84_gjson.geojson",typ:"point",barva:"#007A99",pane:"body"},
+      {nazev:"Cyklostezky",soubor:"cyklo_WGS84_utf8.geojson",typ:"line",barva:"#6A5ACD",pane:"linie"}
     ];
 
-    /* ===== Bezpečné escapování textů do HTML (XSS safe) ===== */
-    function esc(s){
-      return String(s).replace(/[&<>"']/g, m => (
-        {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]
-      ));
-    }
+    function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;","&gt;":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
 
-    /* ===== Choropleth obvodů + legenda (původní logika) ===== */
-    let obvodyLayer;
+    let obvodyLayer, obvodyOutlineLayer;
 
-    d3.json("Obvody_WGS84.geojson").then(function(obvodyData) {
-      d3.csv("sportoviste_obvody.csv").then(function(csvData) {
-        const dataMap = {};
-        csvData.forEach(row => {
-          dataMap[row.OBKOD] = { pocet: +row.POCET, venk: +row.VENK };
-        });
+    // Always-on outline + optional choropleth
+    d3.json("Obvody_WGS84.geojson").then(obvodyData=>{
+      // 1) Outline (always visible, not toggleable)
+      obvodyOutlineLayer = L.geoJSON(obvodyData, {
+        pane: 'obvody-outline',
+        style: { color: '#6b86a3', weight: 2, fill: false, fillOpacity: 0, opacity: 1 },
+        interactive: false
+      }).addTo(map);
 
-        function getColor(d) {
-          return d > 40 ? '#003C69' :
-                 d > 30 ? '#005A8B' :
-                 d > 20 ? '#0079AD' :
-                 d > 10 ? '#0096C2' :
-                 d > 5  ? '#00A8CB' :
-                 d > 0  ? '#00BBD3' :
-                          '#00ADD0';
-        }
-
-        function style(feature) {
-          const value = (dataMap[feature.properties.OBKOD] || {}).pocet || 0;
-          return {
-            fillColor: getColor(value),
-            weight: 2,
-            opacity: 1,
-            color: 'white',
-            dashArray: '3',
-            fillOpacity: 0.7,
-            pane: 'obvody'
-          };
-        }
-
-        obvodyLayer = L.geoJSON(obvodyData, {
-          style: style,
-          onEachFeature: function(feature, layer) {
-            const obkod = feature.properties.OBKOD;
-            const d = dataMap[obkod] || { pocet: 0, venk: 0 };
-            layer.bindPopup(
-              `<strong>${esc(feature.properties.NAZEV)}</strong><br>`+
-              `Počet sportovišť: ${esc(d.pocet)}<br>`+
-              `Počet venkovních sportovišť:<br>`+
-              `Počet volně přístupných sportovišť:<br>`
-              //`Počet venkovních sportovišť: ${esc(d.venk)}`
-            );
+      // 2) Choropleth (toggleable)
+      d3.csv("sportoviste_obvody.csv").then(csvData=>{
+        const dataMap={}; csvData.forEach(r=>{dataMap[r.OBKOD]={pocet:+r.POCET,venk:+r.VENK};});
+        function getColor(d){return d>40?'#003C69':d>30?'#005A8B':d>20?'#0079AD':d>10?'#0096C2':d>5?'#00A8CB':d>0?'#00BBD3':'#00ADD0';}
+        function style(f){const v=(dataMap[f.properties.OBKOD]||{}).pocet||0;return{fillColor:getColor(v),weight:1,opacity:1,color:'#ffffff',dashArray:'3',fillOpacity:0.65,pane:'obvody'};}
+        obvodyLayer=L.geoJSON(obvodyData,{
+          style:style,
+          onEachFeature:(f,l)=>{
+            const d=dataMap[f.properties.OBKOD]||{pocet:0};
+            l.bindPopup(`<strong>${esc(f.properties.NAZEV)}</strong><br>Počet sportovišť: ${esc(d.pocet)}`);
           }
         }).addTo(map);
 
-        // Legenda 
-        const legend = L.control({position: 'bottomright'});
-        legend.onAdd = function () {
-          const div = L.DomUtil.create('div', 'legend');
-          const grades = [0, 5, 10, 20, 30, 40];
-          div.innerHTML += '<b>Počet sportovišť</b><br>';
-          for (let i = 0; i < grades.length; i++) {
-            div.innerHTML +=
-              '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-          }
-          return div;
-        };
+        const legend=L.control({position:'bottomright'});
+        legend.onAdd=()=>{const div=L.DomUtil.create('div','legend');const grades=[0,5,10,20,30,40];div.innerHTML+='<b>Počet sportovišť</b><br>';for(let i=0;i<grades.length;i++){div.innerHTML+='<i style="background:'+getColor(grades[i]+1)+'"></i> '+grades[i]+(grades[i+1]?'&ndash;'+grades[i+1]+'<br>':'+');}return div;};
         legend.addTo(map);
       });
     });
 
-    /* Načtení „vrstvy“: body/linie */
-    function renderInfoTable(vrstvaNazev, props){
-      let html = `<h4>${esc(vrstvaNazev)}</h4><table>`;
-      for (const key in props) {
-        html += `<tr><td><strong>${esc(key)}</strong></td><td>${esc(props[key])}</td></tr>`;
-      }
-      html += '</table>';
-      infoPanel.innerHTML = html;
-      infoPanel.style.display = 'block';
-    }
+    function renderInfoTable(n,props){let html=`<h4>${esc(n)}</h4><table>`;for(const k in props){html+=`<tr><td><strong>${esc(k)}</strong></td><td>${esc(props[k])}</td></tr>`;}html+='</table>';infoPanel.innerHTML=html;infoPanel.style.display='block';}
 
-    vrstvy.forEach(vrstva => {
-      d3.json(vrstva.soubor).then(data => {
-        let geoLayer;
-
-        if (vrstva.typ === "point") {
-          geoLayer = L.geoJSON(data, {
-            pane: vrstva.pane,
-            pointToLayer: function (feature, latlng) {
-              return L.circleMarker(latlng, {
-                radius: 7,
-                fillColor: vrstva.barva,
-                color: "#222",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.85
-              });
-            },
-            onEachFeature: function (feature, layer) {
-              layer.on('click', function (e) {
-                renderInfoTable(vrstva.nazev, feature.properties || {});
-                L.DomEvent.stop(e);
-              });
-            }
+    // Load dynamic layers
+    vrstvy.forEach(v=>{
+      d3.json(v.soubor).then(data=>{
+        let g;
+        if(v.typ==="point"){
+          g=L.geoJSON(data,{
+            pane:v.pane,
+            pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:7,fillColor:v.barva,color:"#222",weight:1,opacity:1,fillOpacity:0.85}),
+            onEachFeature:(f,l)=> l.on('click',e=>{renderInfoTable(v.nazev,f.properties||{});L.DomEvent.stop(e);})
           });
-        } else if (vrstva.typ === "line") {
-          geoLayer = L.geoJSON(data, {
-            pane: vrstva.pane,
-            style: function () {
-              return { color: vrstva.barva, weight: 4, opacity: 0.7 };
-            },
-            onEachFeature: function (feature, layer) {
-              layer.on('click', function (e) {
-                renderInfoTable(vrstva.nazev, feature.properties || {});
-                L.DomEvent.stop(e);
-              });
-            }
+        }else if(v.typ==="line"){
+          g=L.geoJSON(data,{
+            pane:v.pane,
+            style:()=>({color:v.barva,weight:4,opacity:0.7}),
+            onEachFeature:(f,l)=> l.on('click',e=>{renderInfoTable(v.nazev,f.properties||{});L.DomEvent.stop(e);})
           });
         }
+        g.addTo(map);
+        overlayLayers[v.nazev]=g;
 
-        geoLayer.addTo(map);
-        overlayLayers[vrstva.nazev] = geoLayer;
-
-        // Ovládání vrstev po načtení všech
-        if (Object.keys(overlayLayers).length === vrstvy.length) {
-          L.control.layers(null, overlayLayers, { collapsed: false }).addTo(map);
-        }
+        if(Object.keys(overlayLayers).length===vrstvy.length){ L.control.layers(null, overlayLayers, {collapsed:false}).addTo(map); bindSidebarToggles(); }
       });
     });
+
+    // Basemap
+    const basemap=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',subdomains:['a','b','c'],maxZoom:19});
+
+    function bindSidebarToggles(){
+      document.getElementById('layerObvody').addEventListener('change',e=>{ if(!obvodyLayer) return; e.target.checked?obvodyLayer.addTo(map):map.removeLayer(obvodyLayer); });
+      document.getElementById('layerBody').addEventListener('change',e=>{ const l=overlayLayers["Sportoviště"]; if(!l) return; e.target.checked?l.addTo(map):map.removeLayer(l); });
+      document.getElementById('layerCyklotrasy').addEventListener('change',e=>{ const l=overlayLayers["Cyklostezky"]; if(!l) return; e.target.checked?l.addTo(map):map.removeLayer(l); });
+      document.getElementById('layerBasemap').addEventListener('change',e=>{ e.target.checked?basemap.addTo(map):map.removeLayer(basemap); });
+    }
+
+    // Drawer + overlay behavior
+    const sidebar=document.getElementById('sidebar'); const toggleBtn=document.getElementById('toggleSidebar'); const overlay=document.getElementById('overlay'); const mql=window.matchMedia('(max-width:860px)');
+    function setDrawerMode(){ if(mql.matches){ sidebar.classList.add('drawer'); sidebar.classList.remove('open'); overlay.classList.remove('active'); } else { sidebar.classList.remove('drawer'); sidebar.classList.remove('open'); overlay.classList.remove('active'); } }
+    setDrawerMode(); mql.addEventListener('change', setDrawerMode);
+    toggleBtn.addEventListener('click',()=>{ if(!sidebar.classList.contains('drawer')) return; const open=!sidebar.classList.contains('open'); sidebar.classList.toggle('open'); overlay.classList.toggle('active', open); });
+    overlay.addEventListener('click',()=>{ sidebar.classList.remove('open'); overlay.classList.remove('active'); });
   </script>
 </body>
 </html>
-
-
-
-
