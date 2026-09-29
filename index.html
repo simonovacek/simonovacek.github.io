@@ -1,230 +1,232 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8" />
-  <title>Mapa sportu v Ostravě</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --ostrava-dark:#003C69;
-      --ostrava-light:#00ADD0;
-      --muted:#6b86a3;
-      --chip-bg:#f3f7fb;
-      --chip-border:#bcd3e6;
-      --panel-w:320px;
-      --top-h:56px;
-      --shadow:0 8px 24px rgba(0,0,0,.08);
-    }
-    html, body { height: 100%; margin: 0; padding: 0; }
-    body{font-family:'Montserrat',sans-serif;color:#0b294b;}
-    #map { position: absolute; inset: 0; width: 100%; height: 100%; background:#fff; }
-
-    .topbar{position: fixed; left:0; top:0; right:0; height:var(--top-h);
-      display:flex; align-items:center; gap:12px; padding:8px 10px;
-      background:#fff; border-bottom:1px solid #e6eef6; z-index:1200;}
-    .hamburger{width:36px; height:36px; border-radius:8px; border:1px solid #d5e7f5;
-      background:#f6fbff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;}
-    .hamburger svg{width:20px; height:20px;}
-    .logo{height:28px; width:auto; object-fit:contain;}
-    .title{font-size:18px; font-weight:800;}
-    .spacer{flex:1}
-    .search{display:flex; align-items:center; gap:8px; border:1px solid #d5e7f5; border-radius:999px; padding:6px 10px; background:#f6fbff;}
-    .search input{border:none; outline:none; background:transparent; width:200px; font-size:14px;}
-
-    aside#sidebar{position: fixed; top:var(--top-h); left:0; bottom:0; width:var(--panel-w);
-      background:#fff; border-right:1px solid #e6eef6; padding:14px; overflow:auto; z-index:1100;
-      transition: transform .25s ease;}
-    aside#sidebar.drawer{transform: translateX(-100%);}
-    aside#sidebar.drawer.open{transform: translateX(0); box-shadow: var(--shadow);}
-
-    h2{font-size:13px; text-transform:uppercase; color:var(--muted); margin:14px 0 8px}
-    .chips{display:flex; flex-wrap:wrap; gap:8px}
-    .chip{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
-      border:1px solid var(--chip-border); background:var(--chip-bg); cursor:pointer; font-weight:600}
-    .chip.selected{background:var(--ostrava-light); color:#fff; border-color:var(--ostrava-light)}
-    .segmented{display:flex; border:1px solid #cfe1f0; border-radius:999px; overflow:hidden; background:var(--chip-bg)}
-    .segmented .chip{border:0; border-radius:0; background:transparent; flex:1; justify-content:center}
-    .segmented .chip.selected{background:var(--ostrava-light); color:#fff}
-    .check{display:flex; align-items:center; gap:10px; padding:10px 8px; background:#f7fbff; border:1px solid #d8e7f5; border-radius:12px; margin:6px 0}
-    .check input{width:18px; height:18px}
-    .check.disabled{opacity:.5; filter:saturate(.6)}
-    .row{display:flex; align-items:center; justify-content:space-between}
-    .button{display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
-      border:1px solid #d8e7f5; background:#f6fbff; cursor:pointer; font-weight:700}
-    .button.primary{background:var(--ostrava-dark); color:#fff; border-color:var(--ostrava-dark)}
-
-    #overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: none;}
-    #overlay.active {display:block;}
-
-    #info-panel {position: absolute; top: calc(var(--top-h) + 10px); right: 10px; background: white;
-      padding: 12px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.2); z-index: 1300;
-      width: 320px; max-height: 60%; overflow-y: auto; font-size: 14px; display: none;}
-    #info-panel table{width:100%; border-collapse:collapse;}
-    #info-panel td{padding:4px 6px; vertical-align:top;}
-    #info-panel tr:nth-child(even){background-color:#f0f0f0;}
-
-    #map-license {position: absolute; bottom: 16px; left: calc(30px + var(--panel-w));
-      background: rgba(255,255,255,0.86); font-size: 12px; padding: 4px 8px; border-radius: 4px;
-      z-index: 600; pointer-events: none;}
-    #map-license a{text-decoration:none; color:#007A99; pointer-events:auto;}
-
-    .legend {line-height: 18px; color:#555; background:white; padding:6px 8px; box-shadow:0 0 15px rgba(0,0,0,0.2); border-radius:5px;}
-    .legend i{width:18px; height:18px; float:left; margin-right:8px; opacity:0.7}
-
-    @media (max-width: 860px){
-      .logo{height:20px;} .title{font-size:16px;} .search{display:none;}
-      aside#sidebar{width:86vw; max-width:360px;} #map-license{left:16px;}
-    }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Příprava fotografií k tisku</title>
+  <style id="app-styles">
+:root { --ink:#1b2430; --muted:#657080; --line:#dfe4e9; --surface:#fff; --canvas:#f5f7f8; --accent:#146c62; --accent-soft:#e9f5f2; }
+* { box-sizing:border-box; }
+html,body { max-width:100%; overflow-x:hidden; } body { margin:0; background:var(--canvas); color:var(--ink); font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button, input { font:inherit; }
+.app-shell { width:calc(100% - 32px); max-width:820px; margin:0 auto; padding:64px 0 72px; }
+.app-shell.preview-active > .page-header,.app-shell.preview-active > #print-form,.app-shell.preview-active > #summary { display:none; }
+.page-header { margin-bottom:38px; max-width:620px; }
+.eyebrow { margin:0 0 10px; color:var(--accent); font-size:.79rem; font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+h1,h2,p { margin-top:0; } h1 { margin-bottom:12px; font-size:clamp(2rem,5vw,2.75rem); line-height:1.12; letter-spacing:-.04em; } .intro,.section-heading p { color:var(--muted); line-height:1.55; }
+.upload-section { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; margin-bottom:16px; box-shadow:0 1px 2px rgb(27 36 48 / 3%); }
+.section-heading { display:flex; align-items:start; justify-content:space-between; gap:16px; margin-bottom:18px; } h2 { margin-bottom:4px; font-size:1.1rem; letter-spacing:-.02em; } .section-heading p { margin-bottom:0; font-size:.9rem; }
+.file-count { white-space:nowrap; background:#f0f3f5; border-radius:999px; padding:6px 10px; color:#485462; font-size:.8rem; font-weight:650; }
+.drop-zone { min-height:142px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px; border:1.5px dashed #bac5cb; border-radius:12px; background:#fbfcfc; color:var(--muted); text-align:center; padding:20px; cursor:pointer; outline:none; }
+.drop-zone:hover,.drop-zone:focus-visible,.drop-zone.is-dragging { border-color:var(--accent); background:var(--accent-soft); } .drop-zone strong { color:var(--ink); font-size:.94rem; } .upload-icon { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:#eef2f3; color:var(--accent); font-size:1.25rem; font-weight:700; }
+.choose-files { border:0; background:transparent; color:var(--accent); text-decoration:underline; cursor:pointer; padding:0; font-weight:650; }
+.native-file-input { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.selection-status { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:14px; padding:13px 14px; border-radius:10px; background:var(--accent-soft); color:#294740; font-size:.9rem; }
+.selection-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }.secondary-button,.text-button,.remove-button { cursor:pointer; font-weight:650; font-size:.82rem; }.secondary-button { border:1px solid #9ccbc1; border-radius:7px; background:#fff; color:var(--accent); padding:7px 10px; }.text-button,.remove-button { border:0; background:transparent; color:#a23d3d; padding:7px 5px; }.copies-total { margin:14px 0 0; color:#294740; font-size:.9rem; font-weight:700; }
+.preview-grid { list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px; padding:0; margin:14px 0 0; }.preview-grid:empty { display:none; }.preview-card { min-width:0; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#f9fafb; }.photo-preview { display:block; width:100%; max-width:100%; height:132px; max-height:132px; object-fit:cover; background:#eef2f3; }.class-photo-preview { height:auto; max-height:none; aspect-ratio:153 / 103; }.preview-body { min-width:0; padding:10px; }.preview-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin:0 0 10px; font-size:.82rem; font-weight:650; }.preview-controls { display:flex; align-items:center; justify-content:space-between; gap:8px; }.copy-control { display:flex; align-items:center; gap:6px; color:#485462; font-size:.74rem; font-weight:600; }.copy-control input { width:54px; min-height:34px; padding:5px; border:1px solid #c6ced4; border-radius:6px; text-align:center; color:var(--ink); }
+.continue-button { width:100%; margin-top:8px; border:0; border-radius:10px; background:var(--accent); color:white; padding:15px 20px; font-weight:700; cursor:pointer; } .continue-button:hover { background:#10594f; } .continue-button span { margin-left:8px; }
+.summary { margin-top:24px; padding:22px 24px; border-radius:14px; border:1px solid #b8ded6; background:var(--accent-soft); } .summary h2 { margin-bottom:14px; } .summary ul { margin:0; padding-left:20px; color:#34434b; } .summary li+li { margin-top:7px; }
+.print-preview { padding-top:4px; }.preview-header { display:flex; align-items:start; justify-content:space-between; gap:16px; margin-bottom:20px; }.preview-header .eyebrow { margin-bottom:6px; }.preview-header h2 { margin:0; font-size:1.55rem; }.preview-summary-heading { margin:0 0 9px; font-size:.95rem; }.preview-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }.preview-stat { padding:11px; border:1px solid var(--line); border-radius:9px; background:#fff; }.preview-stat strong { display:block; margin-top:2px; font-size:1.05rem; }.preview-stat span { color:var(--muted); font-size:.75rem; }.page-indicator { margin:0 0 10px; color:#485462; font-size:.9rem; font-weight:700; text-align:center; }.a4-page { width:min(100%, 620px); aspect-ratio:210 / 297; margin:0 auto; position:relative; overflow:hidden; background:#fff; box-shadow:0 10px 28px rgb(27 36 48 / 14%); }.a4-page.primary-layout,.a4-page.class-layout { padding:0; }.print-slot { position:absolute; overflow:hidden; background:#eef2f3; }.print-preview-canvas { display:block; width:100%; height:100%; } .slot-edit-button { position:absolute; right:7px; bottom:7px; z-index:2; border:1px solid rgb(255 255 255 / 75%); border-radius:8px; background:rgb(255 255 255 / 92%); color:var(--accent); padding:7px 9px; font-size:.72rem; font-weight:750; line-height:1; box-shadow:0 2px 8px rgb(0 0 0 / 14%); cursor:pointer; backdrop-filter:blur(4px); } .slot-edit-button:active { background:#fff; }.page-navigation { display:flex; justify-content:space-between; gap:12px; width:100%; max-width:620px; margin:18px auto 0; }.page-navigation .continue-button { width:auto; margin:0; }.page-navigation button:disabled { opacity:.45; cursor:not-allowed; }
+@media (max-width:560px) { .app-shell { width:calc(100% - 24px); max-width:820px; padding-top:40px; } .upload-section { padding:18px; } .section-heading,.selection-status { flex-direction:column; gap:10px; align-items:stretch; } .selection-actions { justify-content:space-between; }.preview-grid { grid-template-columns:1fr; }.copy-control { font-size:.82rem; }.copy-control input { min-height:38px; width:64px; }.preview-summary { grid-template-columns:repeat(2,1fr); }.preview-header { align-items:center; }.preview-header h2 { font-size:1.3rem; }.preview-header .secondary-button { white-space:nowrap; } }
+.mobile-upload-button { width:100%; min-height:48px; border:1px solid #b9d9d3; border-radius:10px; background:#fff; color:var(--accent); cursor:pointer; font-weight:750; font-size:.92rem; }
+.mobile-upload-button:active { background:var(--accent-soft); }
+.upload-help { margin:8px 0 0; color:var(--muted); font-size:.78rem; line-height:1.45; text-align:center; }
+.upload-loading[hidden] { display:none !important; }
+.upload-loading { display:flex; align-items:center; gap:10px; margin-top:12px; padding:11px 12px; border-radius:10px; background:#f4f7f7; color:#42515a; font-size:.84rem; }
+.loading-spinner { width:16px; height:16px; flex:0 0 16px; border:2px solid #cbd9d6; border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.class-editor { position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center; padding:16px; background:rgb(15 23 30 / 55%); }
+.class-editor[hidden] { display:none; }
+.class-editor-dialog { width:min(100%, 680px); max-height:calc(100dvh - 32px); overflow:auto; border-radius:18px; background:#fff; padding:18px; box-shadow:0 20px 60px rgb(0 0 0 / 25%); }
+.class-editor-header { display:flex; align-items:start; justify-content:space-between; gap:14px; margin-bottom:14px; }
+.class-editor-header h2 { margin:0 0 4px; font-size:1.15rem; }
+.class-editor-header p { margin:0; color:var(--muted); font-size:.82rem; line-height:1.4; }
+.close-editor { border:0; background:#f0f3f5; color:var(--ink); width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1.15rem; }
+.crop-viewport { position:relative; width:100%; aspect-ratio:153 / 103; overflow:hidden; border-radius:12px; background:#e9edef; touch-action:none; }
+.crop-canvas { display:block; width:100%; height:100%; }
+.crop-hint { margin:10px 0 0; color:var(--muted); font-size:.8rem; text-align:center; }
+.class-editor-actions { display:flex; gap:10px; margin-top:16px; }
+.class-editor-actions button { flex:1; min-height:46px; border-radius:10px; cursor:pointer; font-weight:750; }
+.crop-cancel { border:1px solid #cbd3d8; background:#fff; color:var(--ink); }
+.crop-apply { border:0; background:var(--accent); color:#fff; }
+.class-edit-button { width:100%; margin-top:8px; border:1px solid #b9d9d3; border-radius:8px; background:#fff; color:var(--accent); padding:9px 10px; cursor:pointer; font-weight:700; font-size:.82rem; }
+@media (max-width:560px) { .drop-zone { min-height:0; padding:0; border:0; background:transparent; cursor:default; } .drop-zone:hover,.drop-zone:focus-visible,.drop-zone.is-dragging { border:0; background:transparent; } .drop-zone .upload-icon,.drop-zone strong,.drop-zone > span:not(.upload-icon) { display:none; } .drop-zone .mobile-upload-button { display:block; } .class-editor { padding:10px; align-items:flex-end; } .class-editor-dialog { max-height:calc(100dvh - 20px); border-radius:18px 18px 12px 12px; padding:16px; } }
+.upload-info-modal { position:fixed; inset:0; z-index:1200; display:flex; align-items:center; justify-content:center; padding:18px; background:rgb(15 23 30 / 55%); }
+.upload-info-modal[hidden] { display:none; }
+.upload-info-dialog { width:min(100%, 430px); border-radius:18px; background:#fff; padding:22px; box-shadow:0 20px 60px rgb(0 0 0 / 25%); }
+.upload-info-dialog h2 { margin:0 0 10px; font-size:1.12rem; }
+.upload-info-dialog p { margin:0; color:var(--muted); font-size:.9rem; line-height:1.5; }
+.upload-info-dialog button { width:100%; margin-top:18px; min-height:46px; border:0; border-radius:10px; background:var(--accent); color:#fff; cursor:pointer; font-weight:750; font-size:.92rem; }
+.pdf-notice { margin-top:16px; padding:14px 16px; border-radius:10px; border-left:4px solid var(--accent); background:#eef7f5; color:#203c37; line-height:1.5; font-size:.92rem; }
+.pdf-notice strong { display:block; margin-bottom:4px; font-size:.96rem; }
+.pdf-button { border:0; border-radius:7px; background:var(--accent); color:#fff; padding:8px 12px; cursor:pointer; font-weight:700; }.pdf-status { width:100%; max-width:620px; margin:12px auto 0; color:#294740; font-size:.88rem; text-align:center; }.pdf-status a { color:var(--accent); font-weight:700; }
   </style>
+
+<style id="native-print-styles">
+#print-all-container {
+  display:none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.native-print-active > *:not(#print-all-container) {
+    display: none !important;
+  }
+
+  body.native-print-active #print-all-container {
+    display: block !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-all-page {
+    position: relative;
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-all-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .print-all-page .print-slot {
+    position: absolute !important;
+  }
+}
+</style>
+
 </head>
 <body>
-  <div class="topbar">
-    <button class="hamburger" id="toggleSidebar" aria-label="Zobrazit filtr">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
-    </button>
-    <img src="Ostrava_lg.png" alt="Ostrava!!!" class="logo" />
-    <div class="title">Mapa sportu v Ostravě</div>
-    <div class="spacer"></div>
-    <div class="search">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.3-4.3m2.3-5.2a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <input type="search" placeholder="Hledat" aria-label="Hledat">
+  <main class="app-shell">
+    <header class="page-header">
+      <p class="eyebrow">Tiskové podklady</p>
+      <h1>Příprava fotografií k tisku</h1>
+      <p class="intro">Nahrajte fotografie podle typu. V dalším kroku je připravíte pro tisk na archy A4.</p>
+    </header>
+
+    <form id="print-form" novalidate>
+      <section class="upload-section" data-category="portraits">
+        <div class="section-heading">
+          <div>
+            <h2>Portréty</h2>
+            <p>Jednotlivé portrétní fotografie.</p>
+          </div>
+          <output class="file-count" id="portraits-count">0 souborů</output>
+        </div>
+        <div class="drop-zone" aria-label="Vybrat portrétní fotografie">
+          <input class="native-file-input" id="portraits-input" type="file" accept="image/*" multiple />
+          <button class="mobile-upload-button choose-files" type="button">＋ Vybrat fotografie</button>
+        </div>
+        <p class="upload-help">Vyberte všechny portréty najednou.</p>
+        <div class="upload-loading" id="portraits-loading" hidden><span class="loading-spinner" aria-hidden="true"></span><span id="portraits-loading-text">Připravuji fotografie…</span></div>
+        <div class="selection-status" id="portraits-status" aria-live="polite" hidden>
+          <strong id="portraits-status-text"></strong>
+          <div class="selection-actions"><button class="secondary-button replace-files" type="button">Nahradit fotografie</button><button class="text-button clear-files" type="button">Odstranit vše</button></div>
+        </div>
+      </section>
+
+      <section class="upload-section" data-category="groups">
+        <div class="section-heading">
+          <div>
+            <h2>Skupinové fotografie</h2>
+            <p>U každé fotografie nastavte požadovaný počet kopií.</p>
+          </div>
+          <output class="file-count" id="groups-count">0 souborů</output>
+        </div>
+        <div class="drop-zone" aria-label="Vybrat skupinové fotografie">
+          <input class="native-file-input" id="groups-input" type="file" accept="image/*" multiple />
+          <button class="mobile-upload-button choose-files" type="button">＋ Přidat fotografie</button>
+        </div>
+        <div class="upload-loading" id="groups-loading" hidden><span class="loading-spinner" aria-hidden="true"></span><span id="groups-loading-text">Připravuji fotografie…</span></div>
+        <p class="copies-total" id="groups-total" aria-live="polite" hidden></p>
+        <ul class="preview-grid" id="groups-list" aria-live="polite"></ul>
+      </section>
+
+      <section class="upload-section" data-category="classes">
+        <div class="section-heading">
+          <div>
+            <h2>Třídní fotografie</h2>
+            <p>Společné fotografie celé třídy.</p>
+          </div>
+          <output class="file-count" id="classes-count">0 souborů</output>
+        </div>
+        <div class="drop-zone" aria-label="Vybrat třídní fotografie">
+          <input class="native-file-input" id="classes-input" type="file" accept="image/*" multiple />
+          <button class="mobile-upload-button choose-files" type="button">＋ Přidat fotografie</button>
+        </div>
+        <div class="upload-loading" id="classes-loading" hidden><span class="loading-spinner" aria-hidden="true"></span><span id="classes-loading-text">Připravuji fotografie…</span></div>
+        <div class="selection-status" id="classes-status" aria-live="polite" hidden>
+          <strong id="classes-status-text"></strong>
+          <div class="selection-actions"><button class="secondary-button replace-files" type="button">Nahradit fotografie</button><button class="text-button clear-files" type="button">Odstranit vše</button></div>
+        </div>
+      </section>
+
+      <button class="continue-button" type="submit">Pokračovat <span aria-hidden="true">→</span></button>
+    </form>
+
+    <section id="summary" class="summary" aria-live="polite" hidden></section>
+    <section id="print-preview" class="print-preview" hidden>
+      <div class="preview-header">
+        <div><p class="eyebrow">Náhled tisku</p><h2>Náhled tisku</h2></div>
+        <button id="back-to-upload" class="secondary-button" type="button">Zpět k výběru</button>
+      </div>
+      <h3 class="preview-summary-heading">Souhrn tiskové fronty</h3>
+      <div id="preview-summary" class="preview-summary"></div>
+      <p id="page-indicator" class="page-indicator" aria-live="polite"></p>
+      <div id="a4-page" class="a4-page" aria-label="Náhled tiskového archu A4"></div>
+      <p id="layout-info" class="layout-info"></p>
+      <nav class="page-navigation" aria-label="Navigace mezi stránkami">
+        <button id="previous-page" class="secondary-button" type="button">← Předchozí</button>
+        <button id="create-pdf" class="pdf-button" type="button">Vytvořit PDF</button>
+        <button id="next-page" class="continue-button" type="button">Další →</button>
+      </nav>
+      <p id="pdf-status" class="pdf-status" aria-live="polite" hidden></p>
+    </section>
+  </main>
+
+  <div id="upload-info-modal" class="upload-info-modal" hidden aria-hidden="true">
+    <div class="upload-info-dialog" role="dialog" aria-modal="true" aria-labelledby="upload-info-title">
+      <h2 id="upload-info-title">Upozornění</h2>
+      <p>Při výběru většího počtu fotek může načítání trvat několik sekund.</p>
+      <button id="upload-info-ok" type="button">OK</button>
     </div>
   </div>
 
-  <div id="overlay"></div>
-
-  <aside id="sidebar" class="drawer">
-    <div class="row"><h2>Kategorie zařízení</h2><button id="resetFilters" class="button">Resetovat filtry</button></div>
-    <div class="chips" id="catChips">
-      <div class="chip">Školní infrastruktura</div>
-      <div class="chip">Sportovní spolky a kluby</div>
-      <div class="chip">Komerční sportoviště</div>
-      <div class="chip">Neorganizovaný sport a rekreace</div>
+  <div id="class-editor" class="class-editor" hidden aria-hidden="true">
+    <div class="class-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="class-editor-title">
+      <div class="class-editor-header">
+        <div><h2 id="class-editor-title">Upravit ořez</h2><p>Posuňte fotografii nebo ji přibližte tak, aby se do výřezu vešlo vše důležité.</p></div>
+        <button id="close-class-editor" class="close-editor" type="button" aria-label="Zavřít">×</button>
+      </div>
+      <div id="crop-viewport" class="crop-viewport"><canvas id="crop-canvas" class="crop-canvas"></canvas></div>
+      <p class="crop-hint">Tažením posuňte fotografii · dvěma prsty přibližte</p>
+      <div class="class-editor-actions">
+        <button id="cancel-class-crop" class="crop-cancel" type="button">Zrušit</button>
+        <button id="apply-class-crop" class="crop-apply" type="button">Použít ořez</button>
+      </div>
     </div>
+  </div>
 
-    <h2>Úroveň sportu</h2>
-    <div class="segmented" id="levelChips">
-      <div class="chip">Vrcholový sport</div>
-      <div class="chip">Výkonnostní sport</div>
-      <div class="chip">Sport pro všechny</div>
-    </div>
-
-    <h2>Analytické vrstvy</h2>
-    <label class="check"><input type="checkbox" id="layerObvody" checked /> Sportoviště dle obvodů (choropleth)</label>
-    <label class="check"><input type="checkbox" id="layerBody" checked /> Sportoviště (body)</label>
-    <label class="check"><input type="checkbox" id="layerCyklotrasy" checked /> Cyklotrasy</label>
-    <label class="check"><input type="checkbox" id="layerBasemap" /> Podkladová mapa</label>
-
-    <div style="height:12px"></div>
-    <button class="button primary" id="applyBtn">Aplikovat filtry</button>
-    <p style="color:var(--muted); font-size:12px; margin-top:8px;">Při přiblížení se mapa zaměřuje na kurzor myši.</p>
-  </aside>
-
-  <div id="map"></div>
-  <div id="info-panel" onclick="event.stopPropagation()"></div>
-  <div id="map-license">
-  Data © <a href="https://mapy.ostrava.cz/data/otevrena-data/" target="_blank">Statutární město Ostrava</a> (CC BY 4.0) |
-  <a href="https://leafletjs.com" target="_blank">Leaflet</a> (BSD-2) |
-  Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a> (ODbL)
-</div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-
-  <script>
-    const map = L.map('map',{center:[49.820,18.250],zoom:11,zoomControl:true,scrollWheelZoom:'mouse',attributionControl:false});
-
-    // Panes for consistent ordering: tilePane ~200 by Leaflet defaults.
-    map.createPane('obvody-outline'); map.getPane('obvody-outline').style.zIndex = 300; // above tiles
-    map.createPane('obvody');         map.getPane('obvody').style.zIndex = 350;        // choropleth above outline
-    map.createPane('linie');          map.getPane('linie').style.zIndex  = 400;
-    map.createPane('body');           map.getPane('body').style.zIndex   = 500;
-
-    const infoPanel=document.getElementById('info-panel'); const overlayLayers={};
-    map.on('click',()=>{infoPanel.style.display='none';});
-
-    // Thematic layers
-    const vrstvy=[
-      {nazev:"Sportoviště",soubor:"sportoviste_WGS84_gjson.geojson",typ:"point",barva:"#007A99",pane:"body"},
-      {nazev:"Cyklostezky",soubor:"cyklo_WGS84_utf8.geojson",typ:"line",barva:"#6A5ACD",pane:"linie"}
-    ];
-
-    function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;","&gt;":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
-
-    let obvodyLayer, obvodyOutlineLayer;
-
-    // Always-on outline + optional choropleth
-    d3.json("Obvody_WGS84.geojson").then(obvodyData=>{
-      // 1) Outline (always visible, not toggleable)
-      obvodyOutlineLayer = L.geoJSON(obvodyData, {
-        pane: 'obvody-outline',
-        style: { color: '#6b86a3', weight: 2, fill: false, fillOpacity: 0, opacity: 1 },
-        interactive: false
-      }).addTo(map);
-
-      // 2) Choropleth (toggleable)
-      d3.csv("sportoviste_obvody.csv").then(csvData=>{
-        const dataMap={}; csvData.forEach(r=>{dataMap[r.OBKOD]={pocet:+r.POCET,venk:+r.VENK};});
-        function getColor(d){return d>40?'#003C69':d>30?'#005A8B':d>20?'#0079AD':d>10?'#0096C2':d>5?'#00A8CB':d>0?'#00BBD3':'#00ADD0';}
-        function style(f){const v=(dataMap[f.properties.OBKOD]||{}).pocet||0;return{fillColor:getColor(v),weight:1,opacity:1,color:'#ffffff',dashArray:'3',fillOpacity:0.65,pane:'obvody'};}
-        obvodyLayer=L.geoJSON(obvodyData,{
-          style:style,
-          onEachFeature:(f,l)=>{
-            const d=dataMap[f.properties.OBKOD]||{pocet:0};
-            l.bindPopup(`<strong>${esc(f.properties.NAZEV)}</strong><br>Počet sportovišť: ${esc(d.pocet)}`);
-          }
-        }).addTo(map);
-
-        const legend=L.control({position:'bottomright'});
-        legend.onAdd=()=>{const div=L.DomUtil.create('div','legend');const grades=[0,5,10,20,30,40];div.innerHTML+='<b>Počet sportovišť</b><br>';for(let i=0;i<grades.length;i++){div.innerHTML+='<i style="background:'+getColor(grades[i]+1)+'"></i> '+grades[i]+(grades[i+1]?'&ndash;'+grades[i+1]+'<br>':'+');}return div;};
-        legend.addTo(map);
-      });
-    });
-
-    function renderInfoTable(n,props){let html=`<h4>${esc(n)}</h4><table>`;for(const k in props){html+=`<tr><td><strong>${esc(k)}</strong></td><td>${esc(props[k])}</td></tr>`;}html+='</table>';infoPanel.innerHTML=html;infoPanel.style.display='block';}
-
-    // Load dynamic layers
-    vrstvy.forEach(v=>{
-      d3.json(v.soubor).then(data=>{
-        let g;
-        if(v.typ==="point"){
-          g=L.geoJSON(data,{
-            pane:v.pane,
-            pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:7,fillColor:v.barva,color:"#222",weight:1,opacity:1,fillOpacity:0.85}),
-            onEachFeature:(f,l)=> l.on('click',e=>{renderInfoTable(v.nazev,f.properties||{});L.DomEvent.stop(e);})
-          });
-        }else if(v.typ==="line"){
-          g=L.geoJSON(data,{
-            pane:v.pane,
-            style:()=>({color:v.barva,weight:4,opacity:0.7}),
-            onEachFeature:(f,l)=> l.on('click',e=>{renderInfoTable(v.nazev,f.properties||{});L.DomEvent.stop(e);})
-          });
-        }
-        g.addTo(map);
-        overlayLayers[v.nazev]=g;
-
-        if(Object.keys(overlayLayers).length===vrstvy.length){ L.control.layers(null, overlayLayers, {collapsed:false}).addTo(map); bindSidebarToggles(); }
-      });
-    });
-
-    // Basemap
-    const basemap=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',subdomains:['a','b','c'],maxZoom:19});
-
-    function bindSidebarToggles(){
-      document.getElementById('layerObvody').addEventListener('change',e=>{ if(!obvodyLayer) return; e.target.checked?obvodyLayer.addTo(map):map.removeLayer(obvodyLayer); });
-      document.getElementById('layerBody').addEventListener('change',e=>{ const l=overlayLayers["Sportoviště"]; if(!l) return; e.target.checked?l.addTo(map):map.removeLayer(l); });
-      document.getElementById('layerCyklotrasy').addEventListener('change',e=>{ const l=overlayLayers["Cyklostezky"]; if(!l) return; e.target.checked?l.addTo(map):map.removeLayer(l); });
-      document.getElementById('layerBasemap').addEventListener('change',e=>{ e.target.checked?basemap.addTo(map):map.removeLayer(basemap); });
-    }
-
-    // Drawer + overlay behavior
-    const sidebar=document.getElementById('sidebar'); const toggleBtn=document.getElementById('toggleSidebar'); const overlay=document.getElementById('overlay'); const mql=window.matchMedia('(max-width:860px)');
-    function setDrawerMode(){ if(mql.matches){ sidebar.classList.add('drawer'); sidebar.classList.remove('open'); overlay.classList.remove('active'); } else { sidebar.classList.remove('drawer'); sidebar.classList.remove('open'); overlay.classList.remove('active'); } }
-    setDrawerMode(); mql.addEventListener('change', setDrawerMode);
-    toggleBtn.addEventListener('click',()=>{ if(!sidebar.classList.contains('drawer')) return; const open=!sidebar.classList.contains('open'); sidebar.classList.toggle('open'); overlay.classList.toggle('active', open); });
-    overlay.addEventListener('click',()=>{ sidebar.classList.remove('open'); overlay.classList.remove('active'); });
-  </script>
+  <script id="jspdf-library" src="./jspdf.umd.min.js" defer></script>
+  <script src="./app.js" defer></script>
 </body>
 </html>
