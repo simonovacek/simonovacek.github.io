@@ -329,7 +329,11 @@ async function imageForPdf(file, widthMm, heightMm, rotate, cropState = { x: 0.5
   const canvas = document.createElement('canvas');
   canvas.width = rotate ? targetHeight : targetWidth;
   canvas.height = rotate ? targetWidth : targetHeight;
-  const context = canvas.getContext('2d', { alpha: false });
+  // Keep image processing in the standard sRGB color space where supported.
+  // This is a canvas color-space setting, not an embedded ICC profile.
+  let context;
+  try { context = canvas.getContext('2d', { alpha: false, colorSpace: 'srgb' }); }
+  catch (_) { context = canvas.getContext('2d', { alpha: false }); }
   if (!context) throw new Error(`Pro fotografii ${file.name} se nepodařilo připravit obraz.`);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
@@ -356,7 +360,16 @@ function loadJsPdf() {
 
 async function createPdf() {
   const jsPDF = await loadJsPdf();
-  const documentPdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+  const documentPdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true, putOnlyUsedFonts: true });
+  // Descriptive PDF metadata improves identification/compatibility, but does not
+  // itself alter image brightness or force a printer's color-management behavior.
+  documentPdf.setProperties({
+    title: 'FotoTisk – fotografie pro tisk na A4',
+    subject: 'Fotografické rozložení pro tisk; obrazová data připravena v RGB/sRGB',
+    author: 'FotoTisk',
+    creator: 'FotoTisk (jsPDF)',
+    keywords: 'FotoTisk, fotografie, A4, RGB, sRGB, tisk'
+  });
   const imageCache = new Map();
   for (let pageIndex = 0; pageIndex < printPages.length; pageIndex += 1) {
     if (pageIndex > 0) documentPdf.addPage('a4', 'portrait');
